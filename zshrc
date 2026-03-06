@@ -86,6 +86,7 @@ unset file files
 alias ls="ls --color=always"
 alias cat="ccat"
 alias grep="grep --color=always"
+alias tree="tree -C"
 
 #---------------- Sudo command-line widget ----------------
 __sudo-replace-buffer() {
