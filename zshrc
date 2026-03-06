@@ -1,4 +1,4 @@
-#---------------- Zshrc ARCHZION ----------------
+#---------------- Zshrc ARCHZION - VERSIONE COMPLETA OTTIMIZZATA (GRIGIO) ----------------
 export TERM=xterm-256color
 
 #---------------- History ----------------
@@ -10,38 +10,7 @@ setopt SHARE_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt HIST_REDUCE_BLANKS
 
-#---------------- Prompt ----------------
-
-#model 1-------------------------------------------------------------------------------------------------------------------------------------
-#PROMPT='%B%F{magenta}%n %F{blue} %f %F{blue}%M%F{yellow}%~ $%f%b '
-
-#model 2-------------------------------------------------------------------------------------------------------------------------------------
-#if [[ -r /etc/os-release ]]; then
-#  DISTRO=$(grep '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"')
-#else
-#  DISTRO="UnknownOS"
-#fi
-
-#PROMPT='%B%F{magenta}%n %F{blue}%m %F{cyan}'"$DISTRO"' %F{yellow}%~%f
-#%F{green}$%f %b'
-
-#model 3------------------------------------------------------------------------------------------------------------------------------------
-#setopt PROMPT_SUBST
-
-# Prompt dinamico: prima riga
-#PROMPT_LINE1='%B%F{magenta}%n %F{cyan}$(if [[ $EUID -eq 0 ]]; then echo "💀"; else echo "👤"; fi)%f %F{blue}%m %F{cyan}Arch Linux %F{yellow}%~%f%b'
-
-# Prompt dinamico: seconda riga
-#PROMPT_LINE2='%F{green}$%f '
-
-# Unisci le due righe
-#PROMPT="${PROMPT_LINE1}
-#${PROMPT_LINE2}"
-#PROMPT='%B%F{magenta}%n %F{cyan}$(if [[ $EUID -eq 0 ]]; then echo "💀"; else echo "👤"; fi)%f %F{blue}%m %F{cyan}Arch Linux %F{yellow}%~%f
-#%F{green}$%f %b'
-
-#model 4--------------------------------------------------------------------------------------------------------------------------------------
-# GUI elegante
+#---------------- Prompt Model 4 (sicuro) ----------------
 get_distro() {
     if [[ -r /etc/os-release ]]; then
         source /etc/os-release
@@ -53,17 +22,17 @@ get_distro() {
 
 if [[ $EUID -eq 0 ]]; then
   SYMBOL="◆"
-  USER_COLOR="%F{red}"
+  USER_COLOR="%{%F{red}%}"
 else
   SYMBOL="◇"
-  USER_COLOR="%F{magenta}"
+  USER_COLOR="%{%F{magenta}%}"
 fi
 
-PROMPT="%B%F{blue}╭─ ${USER_COLOR}%n %F{cyan}${SYMBOL}%f %F{blue}%m %F{white}[$(get_distro)]%f%b
-%F{blue}│  %F{yellow}%~%f
-%F{blue}╰─%F{green}❯%f "
+PROMPT="%{%B%F{blue}%}╭─ ${USER_COLOR}%n %{%F{cyan}%}${SYMBOL}%{%F{blue}%} %m %{%F{white}%}[$(get_distro)]%{%f%b%}
+%{%F{blue}%}│  %{%F{yellow}%}%~%{%f%}
+%{%F{blue}%}╰─%{%F{green}%}$%{%f%} "
 
-#---------------- Bindkey delete-char ----------------
+#---------------- Bindkey delete-char (completo) ----------------
 delete_keys=(
   "^[[3~" "^[[1;5A" "^[[1;5B" "^[[1;5C" "^[[1;5D"
   "^[[27;5;65457~" "^[[27;5;65465~" "^[[27;5;49~"
@@ -88,69 +57,18 @@ for k in "${delete_keys[@]}"; do
   bindkey "$k" delete-char
 done
 
-#---------------- Plugins ----------------
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+#---------------- Plugins (ordine ottimizzato) ----------------
+# 1. zsh-autocomplete
 source /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 
-#---------------- Sudo command-line widget ----------------
-__sudo-replace-buffer() {
-  local old=$1 new=$2 space=${2:+ }
-  if [[ $CURSOR -le ${#old} ]]; then
-    BUFFER="${new}${space}${BUFFER#$old }"
-    CURSOR=${#new}
-  else
-    LBUFFER="${new}${space}${LBUFFER#$old }"
-  fi
-}
+# 2. zsh-autosuggestions (grigio soft)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#AAAAAA,bold"
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-sudo-command-line() {
-  [[ -z $BUFFER ]] && LBUFFER="$(fc -ln -1)"
+# 3. zsh-syntax-highlighting
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-  local WHITESPACE=""
-  if [[ ${LBUFFER:0:1} = " " ]]; then
-    WHITESPACE=" "
-    LBUFFER="${LBUFFER:1}"
-  fi
-
-  {
-    local EDITOR=${SUDO_EDITOR:-${VISUAL:-$EDITOR}}
-    if [[ -z "$EDITOR" ]]; then
-      case "$BUFFER" in
-        sudo\ -e\ *) __sudo-replace-buffer "sudo -e" "" ;;
-        sudo\ *)    __sudo-replace-buffer "sudo" "" ;;
-        *)          LBUFFER="sudo $LBUFFER" ;;
-      esac
-      return
-    fi
-
-    local cmd="${${(z)BUFFER}[1]}"
-    local realcmd="${${(z)aliases[$cmd]}[1]:-$cmd]}"
-    local editorcmd="${${(z)EDITOR}[1]}"
-
-    if [[ "$realcmd" = "$editorcmd" ]] || builtin which -a "$realcmd" | command grep -Fx -q "$editorcmd"; then
-      __sudo-replace-buffer "$cmd" "sudo -e"
-      return
-    fi
-
-    case "$BUFFER" in
-      "$editorcmd"* | "$EDITOR"*) __sudo-replace-buffer "$cmd" "sudo -e" ;;
-      sudo\ -e\ *)                __sudo-replace-buffer "sudo -e" "$EDITOR" ;;
-      sudo\ *)                     __sudo-replace-buffer "sudo" "" ;;
-      *)                           LBUFFER="sudo $LBUFFER" ;;
-    esac
-  } always {
-    LBUFFER="${WHITESPACE}${LBUFFER}"
-    zle && zle redisplay
-  }
-}
-
-zle -N sudo-command-line
-bindkey -M emacs '\e\e' sudo-command-line
-bindkey -M vicmd '\e\e' sudo-command-line
-bindkey -M viins '\e\e' sudo-command-line
-
-#---------------- GRC ----------------
+# 4. GRC
 [[ -s "/etc/profile.d/grc.zsh" ]] && source /etc/profile.d/grc.zsh
 files=(
   /etc/grc.zsh
@@ -169,8 +87,57 @@ alias ls="ls --color=always"
 alias cat="ccat"
 alias grep="grep --color=always"
 
-#---------------- Zsh-autosuggestions ----------------
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=white,bold,bg=#ff00ff"
+#---------------- Sudo command-line widget ----------------
+__sudo-replace-buffer() {
+  local old=$1 new=$2 space=${2:+ }
+  if [[ $CURSOR -le ${#old} ]]; then
+    BUFFER="${new}${space}${BUFFER#$old }"
+    CURSOR=${#new}
+  else
+    LBUFFER="${new}${space}${LBUFFER#$old }"
+  fi
+}
+
+sudo-command-line() {
+  [[ -z $BUFFER ]] && LBUFFER="$(fc -ln -1)"
+  local WHITESPACE=""
+  if [[ ${LBUFFER:0:1} = " " ]]; then
+    WHITESPACE=" "
+    LBUFFER="${LBUFFER:1}"
+  fi
+  {
+    local EDITOR=${SUDO_EDITOR:-${VISUAL:-$EDITOR}}
+    if [[ -z "$EDITOR" ]]; then
+      case "$BUFFER" in
+        sudo\ -e\ *) __sudo-replace-buffer "sudo -e" "" ;;
+        sudo\ *)    __sudo-replace-buffer "sudo" "" ;;
+        *)          LBUFFER="sudo $LBUFFER" ;;
+      esac
+      return
+    fi
+    local cmd="${${(z)BUFFER}[1]}"
+    local realcmd="${${(z)aliases[$cmd]}[1]:-$cmd]}"
+    local editorcmd="${${(z)EDITOR}[1]}"
+    if [[ "$realcmd" = "$editorcmd" ]] || builtin which -a "$realcmd" | command grep -Fx -q "$editorcmd"; then
+      __sudo-replace-buffer "$cmd" "sudo -e"
+      return
+    fi
+    case "$BUFFER" in
+      "$editorcmd"* | "$EDITOR"*) __sudo-replace-buffer "$cmd" "sudo -e" ;;
+      sudo\ -e\ *)                __sudo-replace-buffer "sudo -e" "$EDITOR" ;;
+      sudo\ *)                     __sudo-replace-buffer "sudo" "" ;;
+      *)                           LBUFFER="sudo $LBUFFER" ;;
+    esac
+  } always {
+    LBUFFER="${WHITESPACE}${LBUFFER}"
+    zle && zle redisplay
+  }
+}
+
+zle -N sudo-command-line
+bindkey -M emacs '\e\e' sudo-command-line
+bindkey -M vicmd '\e\e' sudo-command-line
+bindkey -M viins '\e\e' sudo-command-line
 
 #---------------- Completion ----------------
 zstyle ':completion*' completer _complete _ignored _approximate _sudo
