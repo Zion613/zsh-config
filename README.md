@@ -39,7 +39,7 @@ This configuration is intended for users who rely heavily on the terminal in the
 
 Clone the repository and integrate it into your existing Zsh environment by sourcing or symlinking the configuration files.
 
-##Required
+## Required Packages
 ```
 sudo pacman -S zsh-autosuggestions zsh-syntax-highlighting zsh-completions
 ```
