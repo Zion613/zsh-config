@@ -10,7 +10,7 @@ setopt SHARE_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt HIST_REDUCE_BLANKS
 
-#---------------- Prompt Model 4 (sicuro) ----------------
+#---------------- Prompt -----------------------------
 get_distro() {
     if [[ -r /etc/os-release ]]; then
         source /etc/os-release
@@ -32,7 +32,7 @@ PROMPT="%{%B%F{blue}%}╭─ ${USER_COLOR}%n %{%F{cyan}%}${SYMBOL}%{%F{blue}%} %
 %{%F{blue}%}│  %{%F{yellow}%}%~%{%f%}
 %{%F{blue}%}╰─%{%F{green}%}$%{%f%} "
 
-#---------------- Bindkey delete-char (completo) ----------------
+#---------------- Bindkey delete-char -----------------------------
 delete_keys=(
   "^[[3~" "^[[1;5A" "^[[1;5B" "^[[1;5C" "^[[1;5D"
   "^[[27;5;65457~" "^[[27;5;65465~" "^[[27;5;49~"
@@ -57,7 +57,7 @@ for k in "${delete_keys[@]}"; do
   bindkey "$k" delete-char
 done
 
-#---------------- Plugins (ordine ottimizzato) ----------------
+#---------------- Plugins  ------------------------------------------
 # 1. zsh-autocomplete
 source /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 
