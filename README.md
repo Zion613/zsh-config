@@ -1,4 +1,4 @@
-# The ArchZion's Zsh Configuration for Arch Linux
+# Zsh Configuration for Arch Linux
 
 Setup for Arch Linux.  
 
