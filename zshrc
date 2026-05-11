@@ -1,4 +1,4 @@
-#---------------- Zshrc ARCHZION - VERSIONE COMPLETA OTTIMIZZATA (GRIGIO) ----------------
+#---------------- Zshrc ARCHLINUX - CONFIGURATION  ----------------
 export TERM=xterm-256color
 
 #---------------- History ----------------
