@@ -16,7 +16,9 @@ It is intended for users who work frequently in the terminal, particularly in sy
 - Portable setup that can be replicated across different machines
 - Minimal dependency approach to maintain control over the shell environment
 
-- ## Installation (User home folder)
+---
+
+## Installation (User home folder)
 
 This configuration is **personal** and should be installed in the user home folder.
 
@@ -27,30 +29,35 @@ cp ~/.zshrc ~/.zshrc.backup 2>/dev/null || true
 ```
 
 ### 2) Clone the repository (anywhere you prefer)
-```
+
+Example (inside home):
+
+```bash
 git clone https://github.com/REFTA613/zsh-config.git ~/zsh-config
 ```
 
-### 3) Install the .zshrc in your home folder
+### 3) Install the `.zshrc` in your home folder
 
 Option A (simple copy):
-```
+
+```bash
 cp ~/zsh-config/.zshrc ~/.zshrc
 ```
+
 Option B (recommended symlink):
-```
+
+```bash
 ln -sf ~/zsh-config/.zshrc ~/.zshrc
 ```
+
 ### 4) Reload Zsh
-```
+
+```bash
 exec zsh
 ```
 
+---
 
-### Parte 3/4 (Markdown — pacchetti + yay)
-
-```md
-```
 ## Required Packages (Arch Linux)
 
 ### Official repositories
@@ -60,6 +67,8 @@ sudo pacman -Syu --needed zsh zsh-completions zsh-autosuggestions zsh-syntax-hig
 ```
 
 > **Performance note:** if your shell freezes/lag while typing, consider using `zsh-fast-syntax-highlighting` (AUR) and avoid heavy completion UI plugins (see below).
+
+---
 
 ## AUR (Arch Linux) - Install `yay`
 
@@ -84,6 +93,9 @@ Verify:
 ```bash
 yay --version
 ```
+
+---
+
 ## Optional (Recommended) - Faster syntax highlighting (AUR)
 
 On slower CPUs, `zsh-fast-syntax-highlighting` is often smoother than `zsh-syntax-highlighting`.
@@ -98,7 +110,9 @@ yay -S --needed zsh-fast-syntax-highlighting
 
 ### Enable it in `.zshrc` (plugin block example)
 
-Add this to your `.zshrc` (syntax highlighting should be loaded last):
+Use `zsh-fast-syntax-highlighting` if installed, otherwise fallback to `zsh-syntax-highlighting`.
+
+> Important: syntax highlighting should be loaded **last** among “live” plugins.
 
 ```zsh
 # zsh-autosuggestions (async, helps reduce freezes)
@@ -114,11 +128,14 @@ elif [[ -r /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlightin
 fi
 ```
 
+---
+
 ## Notes about freezes / lag while typing (important)
 
 If you experience freezes while typing or when a completion menu appears under the cursor, the cause is usually a heavy interactive completion plugin (for example `zsh-autocomplete`) combined with syntax highlighting.
 
 Recommended approach for performance:
+
 - Prefer Zsh built-in completion (`compinit`) with cache
 - Keep `zsh-autosuggestions` async
 - Prefer `zsh-fast-syntax-highlighting` (AUR) on slower machines
@@ -133,6 +150,7 @@ compinit -d ~/.cache/zsh/zcompdump -C
 ```
 
 If you see warnings like:
+
 - `zsh-syntax-highlighting: unhandled ZLE widget '...'`
 
 They are usually caused by other plugins defining custom ZLE widgets. Disabling the heavy completion plugin typically removes both the warnings and the lag.
