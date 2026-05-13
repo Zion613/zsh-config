@@ -33,7 +33,7 @@ cp ~/.zshrc ~/.zshrc.backup 2>/dev/null || true
 Example (inside home):
 
 ```bash
-git clone https://github.com/REFTA613/zsh-config.git ~/zsh-config
+git clone https://github.com/$user/zsh-config.git ~/zsh-config
 ```
 
 ### 3) Install the `.zshrc` in your home folder
