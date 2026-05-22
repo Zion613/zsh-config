@@ -52,6 +52,7 @@ bindkey '^[[6~' down-line-or-history
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#AAAAAA,bold"
 ZSH_AUTOSUGGEST_USE_ASYNC=1
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+ZSH_AUTOSUGGEST_HISTORY_IGNORE="*grcat*"
 [[ -r /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
   source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
@@ -72,10 +73,17 @@ done
 unset file files
 
 #---------------- Aliases ----------------
-alias ls="ls --color=auto"
-alias grep="grep --color=auto"
-alias tree="tree -C"
-alias cat="ccat"
+# Eza aliases
+alias sudo='sudo '
+alias ls='eza --color=always --group-directories-first'
+alias ll='eza -l --color=always --group-directories-first'
+alias la='eza -la --color=always --group-directories-first'
+
+# Alias specifico per coprire esattamente la tua abitudine di digitazione
+alias 'ls -la'='eza -la --color=always --group-directories-first'
+alias tree="eza -T"
+alias nano="micro"
+alias cat='bat -p'
 
 #---------------- Sudo command-line widget ----------------
 __sudo-replace-buffer() {
@@ -156,3 +164,39 @@ export LESS_TERMCAP_me=$'\e[0m'
 export LESS_TERMCAP_se=$'\e[0m'
 export LESS_TERMCAP_ue=$'\e[0m'
 export GROFF_NO_SGR=1
+
+# ==========================================================
+# 1. Backend di colorazione inline (Zero file sul disco)
+# ==========================================================
+_grcat_help_pipe() {
+    grcat <(cat << 'EOF'
+regexp=(-\w\b|--\w[\w-]+)
+colours=cyan
+=======
+regexp=(?i)^\s*(usage|options|arguments|description|commands|examples|synopsis):
+colours=bold yellow
+=======
+regexp=(<[^>]+>|\[[^\]]+\])
+colours=green
+=======
+regexp=("__[^"]+"|\b[A-Z]{2,}\b)
+colours=magenta
+=======
+regexp=(https?://[^\s]+)
+colours=underline blue
+EOF
+    )
+}
+
+# ==========================================================
+# 2. Intercettore del tasto Invio (Widget Zsh)
+# ==========================================================
+_grc_help_wrapper() {
+    # Se il comando contiene -h o --help e non ci sono già pipe di formattazione
+    if [[ "$BUFFER" =~ "(^|\s)(--help|-h)(\s|$)" ]] && [[ "$BUFFER" != *"| grcat"* ]] && [[ "$BUFFER" != *"| _grcat_help_pipe"* ]] && [[ "$BUFFER" != *"| grep"* ]]; then
+        # Appende il reindirizzamento dell'output alla funzione inline
+        BUFFER="$BUFFER 2>&1 | _grcat_help_pipe"
+    fi
+    zle .accept-line
+}
+zle -N accept-line _grc_help_wrapper
