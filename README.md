@@ -1,156 +1,77 @@
-# Zsh Configuration for Linux Systems and Development Environments
+# High-Performance Zsh Environment for Arch Linux
 
-This repository provides a custom Zsh configuration designed for Linux systems, development environments, and infrastructure workflows. The goal is to offer a fast, minimal, and maintainable shell setup that can be easily deployed across multiple machines.
+A highly optimized, framework-less Zsh configuration engineered for IT professionals, SysAdmins, and developers. This environment prioritizes minimal Time-To-Interactive (TTI), aggressive memory management, and advanced CLI capabilities without the overhead of monolithic frameworks like Oh My Zsh or Prezto.
 
-## Overview
+Native to Arch Linux and its derivatives (e.g., CachyOS), it leverages system-level package management to deploy fast, compiled (Rust/Go) CLI utilities.
 
-The configuration focuses on performance, modularity, and simplicity. It avoids unnecessary complexity and heavy frameworks in favor of a direct and transparent setup that can be fully understood and modified by the user.
+## 🏗️ Architecture & Design Philosophy
 
-It is intended for users who work frequently in the terminal, particularly in system administration, networking, and software development contexts.
+* **Zero-Bloat Sourcing:** Plugins are sourced directly from the root filesystem (`/usr/share/zsh/plugins/`) avoiding unnecessary shell script parsing.
+* **Asynchronous Execution:** Auto-suggestions are configured to run asynchronously (`ZSH_AUTOSUGGEST_USE_ASYNC=1`) to prevent I/O blocking during repository checks.
+* **Modern Toolchain:** Legacy GNU coreutils are aliased to modern, highly parallelized rust-based alternatives (`eza`, `bat`).
+* **ZLE (Zsh Line Editor) Manipulation:** Custom widgets intercept buffer execution to inject formatting tools natively.
 
-## Features
+## 📦 Dependency Management
 
-- Optimized Zsh startup performance with minimal overhead
-- Custom prompt designed for readability and context awareness
-- Integrated shell enhancements (autosuggestions, syntax highlighting, improved completion)
-- Portable setup that can be replicated across different machines
-- Minimal dependency approach to maintain control over the shell environment
+The configuration relies on packages available in the official Arch Linux `extra` repository. Depending on your provisioning workflow, use one of the following commands to synchronize the database and install the toolchain.
 
----
-
-## Installation (User home folder)
-
-This configuration is **personal** and should be installed in the user home folder.
-
-### 1) Backup your current config (recommended)
-
+**Method A: Using Native Pacman (Recommended)**
+Forces a repository database sync (`-y`) to prevent `target not found` errors on stale systems, followed by installation.
 ```bash
-cp ~/.zshrc ~/.zshrc.backup 2>/dev/null || true
+sudo pacman -Sy eza bat micro grc zsh-autosuggestions zsh-syntax-highlighting
 ```
 
-### 2) Clone the repository (anywhere you prefer)
-
-Example (inside home):
-
+**Method B: Using an AUR Helper (yay / paru)**
+Ideal if you already manage your system via an AUR wrapper.
 ```bash
-git clone https://github.com/$user/zsh-config.git ~/zsh-config
+yay -S eza bat micro grc zsh-autosuggestions zsh-syntax-highlighting
 ```
 
-### 3) Install the `.zshrc` in your home folder
+### Component Breakdown
+* `eza`: Modern `ls` replacement (Rust). Provides directory grouping and extended metadata mapping.
+* `bat`: `cat` clone (Rust). Features syntax highlighting, git integration, and automatic paging.
+* `micro`: Terminal-based text editor (Go). Replaces `nano`/`vim` for quick edits; set as global `$EDITOR`.
+* `grc`: Generic Colouriser. Uses regex-based pattern matching to format standard output.
+* `zsh-autosuggestions` & `zsh-syntax-highlighting`: Core DX enhancements for real-time buffer analysis.
 
-Option A (simple copy):
+## 🚀 Deployment
 
+1. **Purge existing configurations:**
 ```bash
-cp ~/zsh-config/.zshrc ~/.zshrc
+mv ~/.zshrc ~/.zshrc.bak
 ```
 
-Option B (recommended symlink):
-
+2. **Fetch the updated configuration:**
 ```bash
-ln -sf ~/zsh-config/.zshrc ~/.zshrc
+curl -o ~/.zshrc [https://raw.githubusercontent.com/](https://raw.githubusercontent.com/)<YOUR-USERNAME>/<YOUR-REPO-NAME>/main/.zshrc
 ```
+*(Note: Replace `<YOUR-USERNAME>` and `<YOUR-REPO-NAME>` with your actual GitHub repository parameters).*
 
-### 4) Reload Zsh
-
+3. **Re-initialize the shell environment:**
 ```bash
 exec zsh
 ```
 
----
+## ⚙️ Core Optimizations & Technical Specs
 
-## Required Packages (Arch Linux)
+### 1. ZLE Help-Intercept Widget (`_grc_help_wrapper`)
+Standard piping (e.g., `command --help | grcat`) corrupts the `.zsh_history` file with execution artifacts. This environment introduces a custom ZLE widget mapped to the `accept-line` event. 
+* **Mechanism:** It detects the `--help` flag via regex `(^|[[:space:]])(--help|-h)([[:space:]]|$)`.
+* **Sanitization:** It dynamically alters the `$BUFFER` by prepending a whitespace and piping the output to an in-memory `grcat` configuration.
+* **Result:** Because `setopt HIST_IGNORE_SPACE` is active, the colorized output is printed to `stdout`, but the manipulated string is excluded from the history file, maintaining forensic cleanliness.
 
-### Official repositories
-
-```bash
-sudo pacman -Syu --needed zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting grc
-```
-
-> **Performance note:** if your shell freezes/lag while typing, consider using `zsh-fast-syntax-highlighting` (AUR) and avoid heavy completion UI plugins (see below).
-
----
-
-## AUR (Arch Linux) - Install `yay`
-
-Some optional performance packages are provided via the AUR.
-
-### 1) Install build dependencies
-
-```bash
-sudo pacman -Syu --needed base-devel git
-```
-
-### 2) Build and install `yay`
-
-```bash
-git clone https://aur.archlinux.org/yay.git
-cd yay
-makepkg -si
-```
-
-Verify:
-
-```bash
-yay --version
-```
-
----
-
-## Optional (Recommended) - Faster syntax highlighting (AUR)
-
-On slower CPUs, `zsh-fast-syntax-highlighting` is often smoother than `zsh-syntax-highlighting`.
-
-Install:
-
-```bash
-yay -S --needed zsh-fast-syntax-highlighting
-# alternative:
-# yay -S --needed zsh-fast-syntax-highlighting-git
-```
-
-### Enable it in `.zshrc` (plugin block example)
-
-Use `zsh-fast-syntax-highlighting` if installed, otherwise fallback to `zsh-syntax-highlighting`.
-
-> Important: syntax highlighting should be loaded **last** among “live” plugins.
-
+### 2. Privilege Escalation Alias Propagation
+By default, the shell terminates alias expansion after reading the `sudo` binary. We manipulate the parsing engine by appending a whitespace to the alias definition:
 ```zsh
-# zsh-autosuggestions (async, helps reduce freezes)
-ZSH_AUTOSUGGEST_USE_ASYNC=1
-ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# prefer fast-syntax-highlighting (AUR), fallback to zsh-syntax-highlighting
-if [[ -r /usr/share/zsh/plugins/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh ]]; then
-  source /usr/share/zsh/plugins/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
-elif [[ -r /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
-  source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-fi
+alias sudo='sudo '
 ```
+This forces the lexer to evaluate the next token in the `$BUFFER` string, allowing commands like `sudo nano` to correctly execute `sudo micro` seamlessly.
+
+### 3. VRAM & Memory Footprint Tuning
+Uncapped shell histories lead to massive RAM allocation and I/O bottlenecks during terminal instantiation. 
+* `$HISTSIZE` and `$SAVEHIST` are hard-capped at `50,000` entries.
+* Compinit cache is forcefully enabled (`-C` flag) and routed to `~/.cache/zsh/zcompdump` to bypass expensive re-evaluations of completion functions on launch.
 
 ---
-
-## Notes about freezes / lag while typing (important)
-
-If you experience freezes while typing or when a completion menu appears under the cursor, the cause is usually a heavy interactive completion plugin (for example `zsh-autocomplete`) combined with syntax highlighting.
-
-Recommended approach for performance:
-
-- Prefer Zsh built-in completion (`compinit`) with cache
-- Keep `zsh-autosuggestions` async
-- Prefer `zsh-fast-syntax-highlighting` (AUR) on slower machines
-- Avoid heavy live completion UI plugins if they cause lag
-
-Example `compinit` with cache:
-
-```zsh
-autoload -Uz compinit
-mkdir -p ~/.cache/zsh
-compinit -d ~/.cache/zsh/zcompdump -C
-```
-
-If you see warnings like:
-
-- `zsh-syntax-highlighting: unhandled ZLE widget '...'`
-
-They are usually caused by other plugins defining custom ZLE widgets. Disabling the heavy completion plugin typically removes both the warnings and the lag.
+*Maintained for Arch Linux ecosystems. For bug reports regarding ZLE widgets, please open an issue.*
+```</YOUR-REPO-NAME></YOUR-USERNAME>
